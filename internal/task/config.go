@@ -8,27 +8,24 @@ import (
 	"github.com/seifenkehrer/seifenkehrer/internal/storage"
 )
 
-type taskConfigEntry struct {
+type configEntry struct {
 	Disabled bool   `json:"disabled,omitempty"`
 	Interval string `json:"interval,omitempty"`
 }
 
-type taskConfig struct {
+type config struct {
 	path    string
 	store   storage.Storage
-	Entries map[string]taskConfigEntry `json:"tasks"`
+	Entries map[string]configEntry `json:"tasks"`
 }
 
-func loadTaskConfig(configDir string) (*taskConfig, error) {
-	return loadTaskConfigWithStorage(configDir, storage.FileStorage{})
-}
-
-func loadTaskConfigWithStorage(configDir string, store storage.Storage) (*taskConfig, error) {
+func loadConfig(configDir string) (*config, error) {
 	path := filepath.Join(configDir, "config.json")
-	c := &taskConfig{
+	store := storage.FileStorage{}
+	c := &config{
 		path:    path,
 		store:   store,
-		Entries: make(map[string]taskConfigEntry),
+		Entries: make(map[string]configEntry),
 	}
 
 	data, err := store.Load(path)
@@ -41,47 +38,47 @@ func loadTaskConfigWithStorage(configDir string, store storage.Storage) (*taskCo
 			return nil, fmt.Errorf("parsing config %s: %w", path, err)
 		}
 		if c.Entries == nil {
-			c.Entries = make(map[string]taskConfigEntry)
+			c.Entries = make(map[string]configEntry)
 		}
 	}
 
 	return c, nil
 }
 
-func (c *taskConfig) isDisabled(taskName string) bool {
-	e, ok := c.Entries[taskName]
+func (c *config) isDisabled(task string) bool {
+	e, ok := c.Entries[task]
 	return ok && e.Disabled
 }
 
-func (c *taskConfig) intervalOverride(taskName string) string {
-	e, ok := c.Entries[taskName]
+func (c *config) interval(task string) string {
+	e, ok := c.Entries[task]
 	if !ok {
 		return ""
 	}
 	return e.Interval
 }
 
-func (c *taskConfig) setDisabled(taskName string, disabled bool) {
-	e := c.Entries[taskName]
+func (c *config) setDisabled(task string, disabled bool) {
+	e := c.Entries[task]
 	e.Disabled = disabled
 	if !e.Disabled && e.Interval == "" {
-		delete(c.Entries, taskName)
+		delete(c.Entries, task)
 		return
 	}
-	c.Entries[taskName] = e
+	c.Entries[task] = e
 }
 
-func (c *taskConfig) setInterval(taskName string, interval string) {
-	e := c.Entries[taskName]
+func (c *config) setInterval(task string, interval string) {
+	e := c.Entries[task]
 	e.Interval = interval
 	if !e.Disabled && e.Interval == "" {
-		delete(c.Entries, taskName)
+		delete(c.Entries, task)
 		return
 	}
-	c.Entries[taskName] = e
+	c.Entries[task] = e
 }
 
-func (c *taskConfig) save() error {
+func (c *config) save() error {
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshaling config: %w", err)
@@ -89,29 +86,29 @@ func (c *taskConfig) save() error {
 	return c.store.Save(c.path, data)
 }
 
-func Enable(configDir string, taskName string) error {
-	c, err := loadTaskConfig(configDir)
+func Enable(configDir string, task string) error {
+	c, err := loadConfig(configDir)
 	if err != nil {
 		return err
 	}
-	c.setDisabled(taskName, false)
+	c.setDisabled(task, false)
 	return c.save()
 }
 
-func Disable(configDir string, taskName string) error {
-	c, err := loadTaskConfig(configDir)
+func Disable(configDir string, task string) error {
+	c, err := loadConfig(configDir)
 	if err != nil {
 		return err
 	}
-	c.setDisabled(taskName, true)
+	c.setDisabled(task, true)
 	return c.save()
 }
 
-func SetInterval(configDir string, taskName string, interval string) error {
-	c, err := loadTaskConfig(configDir)
+func SetInterval(configDir string, task string, interval string) error {
+	c, err := loadConfig(configDir)
 	if err != nil {
 		return err
 	}
-	c.setInterval(taskName, interval)
+	c.setInterval(task, interval)
 	return c.save()
 }

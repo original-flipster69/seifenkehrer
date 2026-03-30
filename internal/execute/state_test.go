@@ -13,25 +13,26 @@ func TestNewExecutorEmptyState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if e.ShouldSkip("anything", time.Hour) {
-		t.Error("empty state should not skip any task")
+	if e.LastRun("anything") != nil {
+		t.Error("empty state should return nil for any task")
 	}
 }
 
-func TestRecordAndSkip(t *testing.T) {
+func TestRecordAndLastRun(t *testing.T) {
 	dir := t.TempDir()
 	e, _ := New(dir, storage.FileStorage{})
 
 	e.RecordRun("test-task")
 
-	if !e.ShouldSkip("test-task", 24*time.Hour) {
-		t.Error("should skip task that just ran with 24h interval")
+	lr := e.LastRun("test-task")
+	if lr == nil {
+		t.Fatal("expected non-nil last run after recording")
 	}
-	if e.ShouldSkip("test-task", 0) {
-		t.Error("should not skip when interval is 0")
+	if time.Since(*lr) > time.Second {
+		t.Error("last run should be very recent")
 	}
-	if e.ShouldSkip("other-task", 24*time.Hour) {
-		t.Error("should not skip unrecorded task")
+	if e.LastRun("other-task") != nil {
+		t.Error("unrecorded task should return nil")
 	}
 }
 
@@ -44,18 +45,23 @@ func TestSaveAndReload(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reload error: %v", err)
 	}
-	if !e2.ShouldSkip("persisted-task", 24*time.Hour) {
+	if e2.LastRun("persisted-task") == nil {
 		t.Error("persisted task should still be tracked after reload")
 	}
 }
 
-func TestShouldNotSkipExpiredInterval(t *testing.T) {
+func TestLastRunExpired(t *testing.T) {
 	dir := t.TempDir()
 	e, _ := New(dir, storage.FileStorage{})
 
-	e.state.entries["old-task"] = stateEntry{LastRun: time.Now().Add(-48 * time.Hour)}
+	past := time.Now().Add(-48 * time.Hour)
+	e.state.entries["old-task"] = stateEntry{LastRun: past}
 
-	if e.ShouldSkip("old-task", 24*time.Hour) {
-		t.Error("should not skip task whose interval has expired")
+	lr := e.LastRun("old-task")
+	if lr == nil {
+		t.Fatal("expected non-nil last run")
+	}
+	if time.Since(*lr) < 47*time.Hour {
+		t.Error("last run should be ~48 hours ago")
 	}
 }

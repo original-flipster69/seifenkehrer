@@ -41,8 +41,8 @@ type Result struct {
 	Error   error
 }
 
-type IntervalChecker interface {
-	ShouldSkip(taskName string, interval time.Duration) bool
+type LastRunProvider interface {
+	LastRun(task string) *time.Time
 }
 
 type loaded struct {
@@ -59,7 +59,7 @@ func LoadAll(tasksDir string) ([]Task, []error) {
 	return tasks, errs
 }
 
-func Resolve(tasksDir string, checker IntervalChecker) ([]Result, []error) {
+func Resolve(tasksDir string, provider LastRunProvider) ([]Result, []error) {
 	all, errs := loadAll(tasksDir)
 
 	var results []Result
@@ -75,7 +75,7 @@ func Resolve(tasksDir string, checker IntervalChecker) ([]Result, []error) {
 			continue
 		}
 
-		if checker != nil && checker.ShouldSkip(l.task.Name, interval) {
+		if provider != nil && shouldSkip(provider.LastRun(l.task.Name), interval) {
 			results = append(results, Result{Name: l.task.Name, Skipped: "interval not elapsed"})
 			continue
 		}
@@ -91,9 +91,19 @@ func Resolve(tasksDir string, checker IntervalChecker) ([]Result, []error) {
 	return results, errs
 }
 
+func shouldSkip(lastRun *time.Time, interval time.Duration) bool {
+	if interval <= 0 {
+		return false
+	}
+	if lastRun == nil {
+		return false
+	}
+	return time.Since(*lastRun) < interval
+}
+
 func loadAll(tasksDir string) ([]loaded, []error) {
 	configDir := filepath.Dir(tasksDir)
-	cfg, _ := loadTaskConfig(configDir)
+	cfg, _ := loadConfig(configDir)
 
 	entries, err := os.ReadDir(tasksDir)
 	if err != nil {
@@ -129,7 +139,7 @@ func loadAll(tasksDir string) ([]loaded, []error) {
 			if cfg.isDisabled(t.Name) {
 				t.Disabled = true
 			}
-			if override := cfg.intervalOverride(t.Name); override != "" {
+			if override := cfg.interval(t.Name); override != "" {
 				t.Interval = override
 			}
 		}

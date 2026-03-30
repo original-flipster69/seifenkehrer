@@ -31,22 +31,21 @@ type Report struct {
 }
 
 func New(configDir string, store storage.Storage) (*Executor, error) {
-	st, err := loadState(configDir, store)
+	st, err := load(configDir, store)
 	if err != nil {
 		return nil, err
 	}
 	return &Executor{state: st}, nil
 }
 
-func (e *Executor) ShouldSkip(taskName string, interval time.Duration) bool {
-	return e.state.ShouldSkip(taskName, interval)
+func (e *Executor) LastRun(task string) *time.Time {
+	return e.state.lastRun(task)
 }
 
-func (e *Executor) Delete(taskName string, paths []string) Report {
+func (e *Executor) Delete(task string, paths []string) Report {
 	report := deletePaths(paths)
 	if len(report.Deleted) > 0 {
-		e.state.RecordRun(taskName)
-		e.state.Save()
+		e.state.RecordRun(task)
 	}
 	return report
 }
@@ -55,9 +54,8 @@ func (e *Executor) DeleteOne(path string) Report {
 	return deletePaths([]string{path})
 }
 
-func (e *Executor) RecordRun(taskName string) {
-	e.state.RecordRun(taskName)
-	e.state.Save()
+func (e *Executor) RecordRun(task string) {
+	e.state.RecordRun(task)
 }
 
 func deletePaths(paths []string) Report {

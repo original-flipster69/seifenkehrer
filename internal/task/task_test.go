@@ -187,13 +187,16 @@ func TestEffectiveInterval(t *testing.T) {
 	}
 }
 
-type noSkip struct{}
+type neverRan struct{}
 
-func (noSkip) ShouldSkip(string, time.Duration) bool { return false }
+func (neverRan) LastRun(string) *time.Time { return nil }
 
-type skipAll struct{}
+type justRan struct{}
 
-func (skipAll) ShouldSkip(string, time.Duration) bool { return true }
+func (justRan) LastRun(string) *time.Time {
+	t := time.Now()
+	return &t
+}
 
 func TestResolveSkipsDisabled(t *testing.T) {
 	dir := t.TempDir()
@@ -220,7 +223,7 @@ globs:
   }
 }`)
 
-	results, _ := Resolve(tasksDir, noSkip{})
+	results, _ := Resolve(tasksDir, neverRan{})
 	for _, r := range results {
 		if r.Name == "disabled" && r.Skipped == "" {
 			t.Error("expected disabled task to have Skipped reason")
@@ -244,7 +247,7 @@ globs:
   - /tmp/nonexistent/*
 `)
 
-	results, _ := Resolve(tasksDir, skipAll{})
+	results, _ := Resolve(tasksDir, justRan{})
 	for _, r := range results {
 		if r.Name == "Skippable" && r.Skipped == "" {
 			t.Error("expected skipped task to have Skipped reason")
@@ -268,7 +271,7 @@ globs:
   - /tmp/nonexistent/*
 `)
 
-	results, _ := Resolve(tasksDir, noSkip{})
+	results, _ := Resolve(tasksDir, neverRan{})
 	found := false
 	for _, r := range results {
 		if r.Name == "Runnable" {
@@ -277,6 +280,33 @@ globs:
 	}
 	if !found {
 		t.Error("expected task to be included")
+	}
+}
+
+func TestShouldSkipNoInterval(t *testing.T) {
+	now := time.Now()
+	if shouldSkip(&now, 0) {
+		t.Error("should not skip when interval is 0")
+	}
+}
+
+func TestShouldSkipNilLastRun(t *testing.T) {
+	if shouldSkip(nil, 24*time.Hour) {
+		t.Error("should not skip when last run is nil")
+	}
+}
+
+func TestShouldSkipRecent(t *testing.T) {
+	now := time.Now()
+	if !shouldSkip(&now, 24*time.Hour) {
+		t.Error("should skip when last run is recent")
+	}
+}
+
+func TestShouldSkipExpired(t *testing.T) {
+	old := time.Now().Add(-48 * time.Hour)
+	if shouldSkip(&old, 24*time.Hour) {
+		t.Error("should not skip when interval has elapsed")
 	}
 }
 

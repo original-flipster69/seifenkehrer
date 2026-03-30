@@ -19,7 +19,7 @@ type stateEntry struct {
 	LastRun time.Time `json:"last_run"`
 }
 
-func loadState(configDir string, store storage.Storage) (*state, error) {
+func load(configDir string, store storage.Storage) (*state, error) {
 	path := filepath.Join(configDir, "state.json")
 	s := &state{
 		path:    path,
@@ -41,22 +41,20 @@ func loadState(configDir string, store storage.Storage) (*state, error) {
 	return s, nil
 }
 
-func (s *state) ShouldSkip(taskName string, interval time.Duration) bool {
-	if interval <= 0 {
-		return false
-	}
-	entry, ok := s.entries[taskName]
+func (s *state) lastRun(task string) *time.Time {
+	entry, ok := s.entries[task]
 	if !ok {
-		return false
+		return nil
 	}
-	return time.Since(entry.LastRun) < interval
+	return &entry.LastRun
 }
 
-func (s *state) RecordRun(taskName string) {
-	s.entries[taskName] = stateEntry{LastRun: time.Now()}
+func (s *state) RecordRun(task string) {
+	s.entries[task] = stateEntry{LastRun: time.Now()}
+	s.save()
 }
 
-func (s *state) Save() error {
+func (s *state) save() error {
 	data, err := json.MarshalIndent(s.entries, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshaling state: %w", err)

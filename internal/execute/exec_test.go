@@ -7,7 +7,7 @@ import (
 )
 
 func TestDeleteFile(t *testing.T) {
-	dir := t.TempDir()
+	dir := tmpDir(t)
 	f := filepath.Join(dir, "deleteme.txt")
 	os.WriteFile(f, []byte("data"), 0644)
 
@@ -24,7 +24,7 @@ func TestDeleteFile(t *testing.T) {
 }
 
 func TestDeleteDirectory(t *testing.T) {
-	dir := t.TempDir()
+	dir := tmpDir(t)
 	sub := filepath.Join(dir, "subdir")
 	os.MkdirAll(sub, 0755)
 	os.WriteFile(filepath.Join(sub, "file.txt"), []byte("data"), 0644)
