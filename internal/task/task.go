@@ -35,9 +35,10 @@ func (t Task) EffectiveInterval() (time.Duration, error) {
 }
 
 type Result struct {
-	Name  string
-	Paths []string
-	Error error
+	Name    string
+	Paths   []string
+	Skipped string
+	Error   error
 }
 
 type IntervalChecker interface {
@@ -64,6 +65,7 @@ func Resolve(tasksDir string, checker IntervalChecker) ([]Result, []error) {
 	var results []Result
 	for _, l := range all {
 		if l.task.Disabled {
+			results = append(results, Result{Name: l.task.Name, Skipped: "disabled"})
 			continue
 		}
 
@@ -74,6 +76,7 @@ func Resolve(tasksDir string, checker IntervalChecker) ([]Result, []error) {
 		}
 
 		if checker != nil && checker.ShouldSkip(l.task.Name, interval) {
+			results = append(results, Result{Name: l.task.Name, Skipped: "interval not elapsed"})
 			continue
 		}
 

@@ -47,7 +47,12 @@ func run(cmd *cobra.Command, args []string) error {
 			printError("%s: %v", r.Name, r.Error)
 			continue
 		}
+		if r.Skipped != "" {
+			printInfo("%s %s", orange(r.Name), dim("— skipped ("+r.Skipped+")"))
+			continue
+		}
 		if len(r.Paths) == 0 {
+			printInfo("%s %s", orange(r.Name), dim("— nothing found"))
 			continue
 		}
 
@@ -60,7 +65,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(groups) == 0 {
-		printInfo("Nothing to clean up.")
+		fmt.Println()
 		return nil
 	}
 

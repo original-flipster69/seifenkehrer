@@ -222,8 +222,11 @@ globs:
 
 	results, _ := Resolve(tasksDir, noSkip{})
 	for _, r := range results {
-		if r.Name == "disabled" {
-			t.Error("expected disabled task to be skipped")
+		if r.Name == "disabled" && r.Skipped == "" {
+			t.Error("expected disabled task to have Skipped reason")
+		}
+		if r.Name == "disabled" && len(r.Paths) > 0 {
+			t.Error("expected disabled task to have no paths")
 		}
 	}
 }
@@ -243,8 +246,11 @@ globs:
 
 	results, _ := Resolve(tasksDir, skipAll{})
 	for _, r := range results {
-		if r.Name == "Skippable" {
-			t.Error("expected task to be skipped")
+		if r.Name == "Skippable" && r.Skipped == "" {
+			t.Error("expected skipped task to have Skipped reason")
+		}
+		if r.Name == "Skippable" && len(r.Paths) > 0 {
+			t.Error("expected skipped task to have no paths")
 		}
 	}
 }
