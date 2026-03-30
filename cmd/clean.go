@@ -38,13 +38,13 @@ func run(cmd *cobra.Command, args []string) error {
 
 	res, errs := task.Resolve(tasksDir, exec)
 	for _, e := range errs {
-		fmt.Fprintf(os.Stderr, "  [error] %v\n", e)
+		printError("%v", e)
 	}
 
 	var groups []taskGroup
 	for _, r := range res {
 		if r.Error != nil {
-			fmt.Fprintf(os.Stderr, "  [error] %s: %v\n", r.Name, r.Error)
+			printError("%s: %v", r.Name, r.Error)
 			continue
 		}
 		if len(r.Paths) == 0 {
@@ -60,7 +60,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(groups) == 0 {
-		fmt.Println("\n  Nothing to clean up.")
+		printInfo("Nothing to clean up.")
 		return nil
 	}
 
@@ -75,10 +75,10 @@ func run(cmd *cobra.Command, args []string) error {
 		fmt.Printf("\n%s\n", sectionHeader(g.name, formatSize(totalSize)))
 
 		for i, p := range g.paths {
-			fmt.Printf("    %s (%s)\n", p, formatSize(g.sizes[i]))
+			fmt.Printf("    %s %s\n", p, dim("("+formatSize(g.sizes[i])+")"))
 		}
 
-		fmt.Print("\n  Delete? [y]es all / [n]o skip / [i]ndividual: ")
+		fmt.Printf("\n  Delete? %s / %s / %s: ", gold("[y]es all"), grey("[n]o skip"), purple("[i]ndividual"))
 		answer := readLine(reader)
 
 		switch answer {
@@ -88,7 +88,7 @@ func run(cmd *cobra.Command, args []string) error {
 		case "i", "individual":
 			selectIndividual(reader, exec, g)
 		default:
-			fmt.Println("  Skipped.")
+			printInfo("Skipped.")
 		}
 	}
 
@@ -97,25 +97,25 @@ func run(cmd *cobra.Command, args []string) error {
 
 func sectionHeader(title string, detail string) string {
 	if detail != "" {
-		full := fmt.Sprintf("%s (%s)", title, detail)
-		return fmt.Sprintf("  %s\n  %s", full, strings.Repeat("─", utf8.RuneCountInString(full)))
+		line := fmt.Sprintf("%s %s", orange(title), dim("("+detail+")"))
+		return fmt.Sprintf("  %s\n  %s", line, dim(strings.Repeat("─", utf8.RuneCountInString(title)+len(detail)+3)))
 	}
-	return fmt.Sprintf("  %s\n  %s", title, strings.Repeat("─", utf8.RuneCountInString(title)))
+	return fmt.Sprintf("  %s\n  %s", orange(title), dim(strings.Repeat("─", utf8.RuneCountInString(title))))
 }
 
 func selectIndividual(reader *bufio.Reader, executor *execute.Executor, g taskGroup) {
 	var anyDeleted bool
 	for i, p := range g.paths {
-		fmt.Printf("    Delete %s (%s)? [y/N]: ", p, formatSize(g.sizes[i]))
+		fmt.Printf("    Delete %s %s? %s: ", p, dim("("+formatSize(g.sizes[i])+")"), grey("[y/N]"))
 		answer := readLine(reader)
 		if answer == "y" || answer == "yes" {
 			report := executor.DeleteOne(p)
 			if len(report.Deleted) > 0 {
 				anyDeleted = true
-				fmt.Printf("    Deleted.\n")
+				printSuccess("Deleted.")
 			}
 			for ep, e := range report.Errors {
-				fmt.Fprintf(os.Stderr, "    [error] %s: %v\n", ep, e)
+				printError("%s: %v", ep, e)
 			}
 		}
 	}
@@ -125,9 +125,9 @@ func selectIndividual(reader *bufio.Reader, executor *execute.Executor, g taskGr
 }
 
 func printReport(report execute.Report) {
-	fmt.Printf("  Deleted %d path(s).\n", len(report.Deleted))
+	printSuccess("Deleted %d path(s).", len(report.Deleted))
 	for p, e := range report.Errors {
-		fmt.Fprintf(os.Stderr, "  [error] %s: %v\n", p, e)
+		printError("%s: %v", p, e)
 	}
 }
 

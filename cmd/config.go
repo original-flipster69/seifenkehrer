@@ -22,7 +22,7 @@ var enableCmd = &cobra.Command{
 		if err := task.Enable(filepath.Dir(tasksDir), args[0]); err != nil {
 			return err
 		}
-		fmt.Printf("  Enabled task %q\n", args[0])
+		printSuccess("Enabled task %s", orange(args[0]))
 		return nil
 	},
 }
@@ -35,7 +35,7 @@ var disableCmd = &cobra.Command{
 		if err := task.Disable(filepath.Dir(tasksDir), args[0]); err != nil {
 			return err
 		}
-		fmt.Printf("  Disabled task %q\n", args[0])
+		printSuccess("Disabled task %s", orange(args[0]))
 		return nil
 	},
 }
@@ -51,7 +51,7 @@ var intervalCmd = &cobra.Command{
 		if err := task.SetInterval(filepath.Dir(tasksDir), args[0], args[1]); err != nil {
 			return err
 		}
-		fmt.Printf("  Set interval for %q to %s\n", args[0], args[1])
+		printSuccess("Set interval for %s to %s", orange(args[0]), gold(args[1]))
 		return nil
 	},
 }
