@@ -1,0 +1,4 @@
+name: Maven Cache
+description: Removes the local Maven repository cache
+globs:
+  - ~/.m2/repository/*
