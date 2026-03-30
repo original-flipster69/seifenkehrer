@@ -1,0 +1,6 @@
+name: Gradle Cache
+description: Removes Gradle build caches, daemon logs, and wrapper distributions
+globs:
+  - ~/.gradle/caches/*
+  - ~/.gradle/daemon/*
+  - ~/.gradle/wrapper/dists/*

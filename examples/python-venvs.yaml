@@ -1,0 +1,9 @@
+name: Python Virtual Environments
+description: Finds Python venv and .venv directories in common project locations under home
+globs:
+  - ~/*/venv
+  - ~/*/.*venv
+  - ~/*/*/venv
+  - ~/*/*/.venv
+  - ~/*/.*/.venv
+  - ~/*/.*/*/.venv

@@ -1,0 +1,7 @@
+name: Chrome Old Versions
+description: Removes outdated Google Chrome framework versions, keeping only the current and most recent one
+globs:
+  - /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/*
+exclude:
+  - Current
+keep_newest: 1
