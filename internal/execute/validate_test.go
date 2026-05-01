@@ -31,15 +31,15 @@ func TestValidatePathProtectedPrefixes(t *testing.T) {
 	}
 
 	for _, p := range protected {
-		if err := validatePath(p); err == nil {
-			t.Errorf("validatePath(%q): expected error for protected path", p)
+		if err := ValidatePath(p); err == nil {
+			t.Errorf("ValidatePath(%q): expected error for protected path", p)
 		}
 	}
 }
 
 func TestValidatePathRoot(t *testing.T) {
-	if err := validatePath("/"); err == nil {
-		t.Error("validatePath(/): expected error for root directory")
+	if err := ValidatePath("/"); err == nil {
+		t.Error("ValidatePath(/): expected error for root directory")
 	}
 }
 
@@ -48,8 +48,8 @@ func TestValidatePathHomeDir(t *testing.T) {
 	if err != nil {
 		t.Skip("cannot determine home directory")
 	}
-	if err := validatePath(home); err == nil {
-		t.Errorf("validatePath(%q): expected error for home directory", home)
+	if err := ValidatePath(home); err == nil {
+		t.Errorf("ValidatePath(%q): expected error for home directory", home)
 	}
 }
 
@@ -59,59 +59,26 @@ func TestValidatePathAllowsSubdirOfHome(t *testing.T) {
 		t.Skip("cannot determine home directory")
 	}
 	sub := filepath.Join(home, "some-temp-subdir-test")
-	if err := validatePath(sub); err != nil {
-		t.Errorf("validatePath(%q): unexpected error: %v", sub, err)
+	if err := ValidatePath(sub); err != nil {
+		t.Errorf("ValidatePath(%q): unexpected error: %v", sub, err)
 	}
 }
 
 func TestValidatePathAllowsTmpDir(t *testing.T) {
 	dir := tmpDir(t)
-	if err := validatePath(dir); err != nil {
-		t.Errorf("validatePath(%q): unexpected error: %v", dir, err)
+	if err := ValidatePath(dir); err != nil {
+		t.Errorf("ValidatePath(%q): unexpected error: %v", dir, err)
 	}
 }
 
-func TestContainsSymlinksNoSymlinks(t *testing.T) {
+func TestValidatePathRejectsSymlinkTraversal(t *testing.T) {
 	dir := tmpDir(t)
-	os.MkdirAll(filepath.Join(dir, "sub"), 0755)
-	os.WriteFile(filepath.Join(dir, "sub", "file.txt"), []byte("data"), 0644)
+	link := filepath.Join(dir, "escape")
+	os.Symlink("/usr", link)
 
-	if containsSymlinks(dir) {
-		t.Error("expected no symlinks in directory")
-	}
-}
-
-func TestContainsSymlinksWithSymlink(t *testing.T) {
-	dir := tmpDir(t)
-	target := filepath.Join(dir, "target.txt")
-	os.WriteFile(target, []byte("data"), 0644)
-
-	link := filepath.Join(dir, "link.txt")
-	os.Symlink(target, link)
-
-	if !containsSymlinks(dir) {
-		t.Error("expected symlinks to be detected")
-	}
-}
-
-func TestContainsSymlinksNested(t *testing.T) {
-	dir := tmpDir(t)
-	sub := filepath.Join(dir, "a", "b")
-	os.MkdirAll(sub, 0755)
-
-	target := filepath.Join(dir, "target.txt")
-	os.WriteFile(target, []byte("data"), 0644)
-	os.Symlink(target, filepath.Join(sub, "link.txt"))
-
-	if !containsSymlinks(dir) {
-		t.Error("expected nested symlink to be detected")
-	}
-}
-
-func TestContainsSymlinksEmpty(t *testing.T) {
-	dir := tmpDir(t)
-	if containsSymlinks(dir) {
-		t.Error("empty directory should not contain symlinks")
+	traversed := filepath.Join(link, "local")
+	if err := ValidatePath(traversed); err == nil {
+		t.Errorf("ValidatePath(%q): expected error for symlink traversal into /usr", traversed)
 	}
 }
 
@@ -125,21 +92,30 @@ func TestDeleteRefusesProtectedPath(t *testing.T) {
 	}
 }
 
-func TestDeleteRefusesDirWithSymlinks(t *testing.T) {
-	dir := tmpDir(t)
-	sub := filepath.Join(dir, "with-links")
-	os.MkdirAll(sub, 0755)
-
-	target := filepath.Join(dir, "target.txt")
-	os.WriteFile(target, []byte("data"), 0644)
-	os.Symlink(target, filepath.Join(sub, "link.txt"))
-
-	report := deletePaths([]string{sub})
-	if len(report.Deleted) != 0 {
-		t.Error("should not delete directory containing symlinks")
+func TestDeleteDirWithSymlinkPreservesExternalTarget(t *testing.T) {
+	outer := tmpDir(t)
+	target := filepath.Join(outer, "outside.txt")
+	if err := os.WriteFile(target, []byte("keep me"), 0644); err != nil {
+		t.Fatal(err)
 	}
-	if _, ok := report.Errors[sub]; !ok {
-		t.Error("expected error for directory with symlinks")
+
+	victim := filepath.Join(outer, "victim")
+	if err := os.MkdirAll(victim, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(target, filepath.Join(victim, "link.txt")); err != nil {
+		t.Fatal(err)
+	}
+
+	report := deletePaths([]string{victim})
+	if len(report.Deleted) != 1 {
+		t.Fatalf("expected 1 deleted, got %d (errors: %v)", len(report.Deleted), report.Errors)
+	}
+	if _, err := os.Stat(victim); !os.IsNotExist(err) {
+		t.Error("victim directory should have been deleted")
+	}
+	if _, err := os.Stat(target); err != nil {
+		t.Errorf("external symlink target should still exist: %v", err)
 	}
 }
 

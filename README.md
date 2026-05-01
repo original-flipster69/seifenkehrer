@@ -12,14 +12,34 @@ Define cleanup tasks as simple YAML files, review what will be deleted, and choo
 
 ## Installation
 
+### Install script
+
 ```bash
-go install github.com/seifenkehrer/seifenkehrer@latest
+curl -fsSL https://raw.githubusercontent.com/original-flipster69/seifenkehrer/main/install.sh | sh
 ```
 
-Or build from source:
+Verifies the SHA256 of the downloaded archive against the published `checksums.txt` before installing, and seeds the default cleanup tasks into `~/.sk/tasks/` (existing files are preserved).
+
+### Homebrew _(planned — tap not yet published)_
+
+Once the tap is published:
 
 ```bash
-git clone https://github.com/seifenkehrer/seifenkehrer.git
+brew install original-flipster69/sk/sk
+```
+
+### Go install
+
+```bash
+go install github.com/original-flipster69/seifenkehrer@latest
+```
+
+> Installs the binary as `seifenkehrer` (matches the module name). Rename or symlink it to `sk` to match the rest of these docs.
+
+### Build from source
+
+```bash
+git clone https://github.com/original-flipster69/seifenkehrer.git
 cd seifenkehrer
 go build -o sk .
 ```
@@ -39,7 +59,7 @@ sk clean --tasks-dir ./my-tasks
 
 ## Task Configuration
 
-Tasks are YAML files placed in `~/.sk/tasks/`. See the `examples/` directory for ready-to-use tasks.
+Tasks are YAML files placed in `~/.sk/tasks/`. See the `.tasks/` directory for ready-to-use tasks.
 
 ```yaml
 name: Chrome Old Versions

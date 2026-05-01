@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/seifenkehrer/seifenkehrer/internal/storage"
+	"github.com/original-flipster69/seifenkehrer/internal/storage"
 )
 
 type configEntry struct {

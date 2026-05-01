@@ -1,0 +1,70 @@
+version: 2
+
+project_name: sk
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: sk
+    binary: sk
+    main: ./
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - id: default
+    name_template: "sk_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    files:
+      - LICENSE*
+      - README*
+      - src: ".tasks/*.yaml"
+        dst: tasks
+        strip_parent: true
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+release:
+  github:
+    owner: original-flipster69
+    name: seifenkehrer
+  draft: false
+  prerelease: auto
+
+# To publish a Homebrew formula on every release:
+#   1. Create a public repo at github.com/original-flipster69/homebrew-sk
+#   2. Generate a fine-grained PAT with contents:write on that repo
+#      and add it to this repo's secrets as HOMEBREW_TAP_GITHUB_TOKEN.
+#   3. Uncomment the block below and the env line in .github/workflows/release.yaml.
+#
+# brews:
+#   - name: sk
+#     repository:
+#       owner: original-flipster69
+#       name: homebrew-sk
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+#     homepage: https://github.com/original-flipster69/seifenkehrer
+#     description: A modular cleanup tool to keep your macOS clean and free of clutter.
+#     install: |
+#       bin.install "sk"
+#       (pkgshare/"tasks").install Dir["tasks/*.yaml"]
+#     caveats: |
+#       Default cleanup tasks were installed to:
+#         #{HOMEBREW_PREFIX}/share/sk/tasks
+#       Copy any you want active to ~/.sk/tasks/, e.g.:
+#         mkdir -p ~/.sk/tasks
+#         cp #{HOMEBREW_PREFIX}/share/sk/tasks/*.yaml ~/.sk/tasks/
