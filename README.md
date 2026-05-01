@@ -18,7 +18,7 @@ Define cleanup tasks as simple YAML files, review what will be deleted, and choo
 curl -fsSL https://raw.githubusercontent.com/original-flipster69/seifenkehrer/main/install.sh | sh
 ```
 
-Verifies the SHA256 of the downloaded archive against the published `checksums.txt` before installing, and seeds the default cleanup tasks into `~/.sk/tasks/` (existing files are preserved).
+Verifies the SHA256 of the downloaded archive against the published `checksums.txt` before installing, and seeds the default cleanup tasks into `~/.seifenkehrer/tasks/` (existing files are preserved).
 
 ### Homebrew _(planned — tap not yet published)_
 
@@ -59,7 +59,7 @@ seifenkehrer clean --tasks-dir ./my-tasks
 
 ## Task Configuration
 
-Tasks are YAML files placed in `~/.sk/tasks/`. See the `.tasks/` directory for ready-to-use tasks.
+Tasks are YAML files placed in `~/.seifenkehrer/tasks/`. See the `.tasks/` directory for ready-to-use tasks.
 
 ```yaml
 name: Chrome Old Versions

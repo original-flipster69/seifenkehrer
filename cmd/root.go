@@ -10,10 +10,13 @@ import (
 
 var tasksDir string
 
+var version = "dev"
+
 var rootCmd = &cobra.Command{
-	Use:   "seifenkehrer",
-	Short: "seifenkehrer - modular macOS cleanup tool",
-	Long:  "A modular cleanup tool that runs user-defined tasks to find and delete unnecessary files and folders.",
+	Use:     "seifenkehrer",
+	Version: version,
+	Short:   "seifenkehrer - modular macOS cleanup tool",
+	Long:    "A modular cleanup tool that runs user-defined tasks to find and delete unnecessary files and folders.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		printBanner()
 	},
@@ -21,7 +24,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	homeDir, _ := os.UserHomeDir()
-	defaultTasksDir := filepath.Join(homeDir, ".sk", "tasks")
+	defaultTasksDir := filepath.Join(homeDir, ".seifenkehrer", "tasks")
 	rootCmd.PersistentFlags().StringVar(&tasksDir, "tasks-dir", defaultTasksDir, "directory containing cleanup task definitions")
 }
 
@@ -56,7 +59,7 @@ func init() {
 		"⠀⠀⠀⠀⠀" + o + "⣾⣿⣿⣈⠙⠻⣿⣿⡿⠟⠛⣉⣠⣴⣾⣿⣿⣿⣿⣿⣿⠇" + r + "⠀⠀⠀" + d + "▄▄▄▀ ▝▚▄▄▖█ ▐▛▀▘ ▝▚▄▄▖█   █ █ ▀▄ ▝▚▄▄▖▐▛▀▚▖█    ▝▚▄▄▖█" + r + "    \n" +
 		"⠀⠀⠀⠀⠀" + o + "⣿⣿⣿⣿⣿⣶⣤⣤⣤⣶⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉" + r + "⠀⠀⠀⠀⠀" + d + "          █ ▐▌              █  █      ▐▌ ▐▌" + r + "               \n" +
 		"⠀⠀⠀⠀⠀" + o + "⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉" + r + "⠀⠀⠀⠀⠀⠀⠀⠀⠀\n" +
-		"⠀⠀⠀⠀⠀⠀⠀" + o + "⠈⠙⠻⢿⣿⣿⡿⠟⠋⠁" + r + "⠀⠀      ⠀" + p + "Storage Cleanup CLI" + r + "\n\n\n"
+		"⠀⠀⠀⠀⠀⠀⠀" + o + "⠈⠙⠻⢿⣿⣿⡿⠟⠋⠁" + r + "⠀⠀      ⠀" + p + "Storage Cleanup CLI" + r + "  " + cDim + version + cReset + "\n\n\n"
 }
 
 func printBanner() {
