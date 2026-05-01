@@ -53,14 +53,17 @@ fetch_latest_tag() {
     return
   fi
 
-  TAG=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
-    "https://github.com/${REPO}/releases/latest" \
-    | sed 's|.*/tag/||')
+  url=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
+    "https://github.com/${REPO}/releases/latest")
+  TAG=${url##*/tag/}
 
-  if [ -z "$TAG" ]; then
-    echo "Error: could not determine latest release" >&2
-    exit 1
-  fi
+  case "$TAG" in
+    v*) ;;
+    *)
+      echo "Error: unexpected release URL: $url" >&2
+      exit 1
+      ;;
+  esac
 }
 
 sha256() {
