@@ -11,7 +11,7 @@ import (
 var tasksDir string
 
 var rootCmd = &cobra.Command{
-	Use:   "sk",
+	Use:   "seifenkehrer",
 	Short: "seifenkehrer - modular macOS cleanup tool",
 	Long:  "A modular cleanup tool that runs user-defined tasks to find and delete unnecessary files and folders.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -26,6 +26,9 @@ func init() {
 }
 
 func Execute() {
+	if name := filepath.Base(os.Args[0]); name != "" && name != "." && name != "/" {
+		rootCmd.Use = name
+	}
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

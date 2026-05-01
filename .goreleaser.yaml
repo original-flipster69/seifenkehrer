@@ -1,14 +1,14 @@
 version: 2
 
-project_name: sk
+project_name: seifenkehrer
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - id: sk
-    binary: sk
+  - id: seifenkehrer
+    binary: seifenkehrer
     main: ./
     env:
       - CGO_ENABLED=0
@@ -25,7 +25,7 @@ builds:
 
 archives:
   - id: default
-    name_template: "sk_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "seifenkehrer_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     formats: [tar.gz]
     files:
       - LICENSE*
@@ -52,7 +52,7 @@ release:
 #   3. Uncomment the block below and the env line in .github/workflows/release.yaml.
 #
 # brews:
-#   - name: sk
+#   - name: seifenkehrer
 #     repository:
 #       owner: original-flipster69
 #       name: homebrew-sk
@@ -60,11 +60,13 @@ release:
 #     homepage: https://github.com/original-flipster69/seifenkehrer
 #     description: A modular cleanup tool to keep your macOS clean and free of clutter.
 #     install: |
-#       bin.install "sk"
+#       bin.install "seifenkehrer"
+#       bin.install_symlink "seifenkehrer" => "sk"
 #       (pkgshare/"tasks").install Dir["tasks/*.yaml"]
 #     caveats: |
+#       The shorter alias 'sk' is also available on $PATH.
 #       Default cleanup tasks were installed to:
-#         #{HOMEBREW_PREFIX}/share/sk/tasks
+#         #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks
 #       Copy any you want active to ~/.sk/tasks/, e.g.:
 #         mkdir -p ~/.sk/tasks
-#         cp #{HOMEBREW_PREFIX}/share/sk/tasks/*.yaml ~/.sk/tasks/
+#         cp #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks/*.yaml ~/.sk/tasks/

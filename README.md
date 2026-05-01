@@ -25,7 +25,7 @@ Verifies the SHA256 of the downloaded archive against the published `checksums.t
 Once the tap is published:
 
 ```bash
-brew install original-flipster69/sk/sk
+brew install original-flipster69/sk/seifenkehrer
 ```
 
 ### Go install
@@ -34,27 +34,27 @@ brew install original-flipster69/sk/sk
 go install github.com/original-flipster69/seifenkehrer@latest
 ```
 
-> Installs the binary as `seifenkehrer` (matches the module name). Rename or symlink it to `sk` to match the rest of these docs.
-
 ### Build from source
 
 ```bash
 git clone https://github.com/original-flipster69/seifenkehrer.git
 cd seifenkehrer
-go build -o sk .
+go build .
 ```
 
 ## Usage
 
+The installed binary is named `seifenkehrer`. The install script and Homebrew formula additionally create a shorter alias `sk` on `$PATH` for convenience — examples below use it.
+
 ```bash
 # List installed cleanup tasks
-sk tasks
+seifenkehrer tasks       # or: sk tasks
 
 # Run cleanup (interactive)
-sk clean
+seifenkehrer clean       # or: sk clean
 
 # Use a custom tasks directory
-sk clean --tasks-dir ./my-tasks
+seifenkehrer clean --tasks-dir ./my-tasks
 ```
 
 ## Task Configuration
@@ -87,11 +87,11 @@ interval: 168h
 
 ```bash
 # Enable/disable a task
-sk config disable <task-name>
-sk config enable <task-name>
+seifenkehrer config disable <task-name>
+seifenkehrer config enable <task-name>
 
 # Set run interval
-sk config interval <task-name> <duration>
+seifenkehrer config interval <task-name> <duration>
 ```
 
 ## How It Works

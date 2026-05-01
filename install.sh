@@ -4,7 +4,8 @@ set -e
 REPO="original-flipster69/seifenkehrer"
 INSTALL_DIR="${SK_INSTALL_DIR:-/usr/local/bin}"
 TASKS_DIR="${HOME}/.sk/tasks"
-BINARY_NAME="sk"
+BINARY_NAME="seifenkehrer"
+SHORT_ALIAS="sk"
 
 require() {
   for cmd in "$@"; do
@@ -76,7 +77,7 @@ sha256() {
 
 download_and_verify() {
   VERSION=${TAG#v}
-  ASSET="sk_${VERSION}_${OS}_${ARCH}.tar.gz"
+  ASSET="${BINARY_NAME}_${VERSION}_${OS}_${ARCH}.tar.gz"
   ASSET_URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
   CHECKSUMS_URL="https://github.com/${REPO}/releases/download/${TAG}/checksums.txt"
 
@@ -109,9 +110,11 @@ install_binary() {
   chmod +x "${TMPDIR}/${BINARY_NAME}"
   if [ -w "$INSTALL_DIR" ]; then
     mv "${TMPDIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+    ln -sf "${BINARY_NAME}" "${INSTALL_DIR}/${SHORT_ALIAS}"
   else
     echo "Installing to ${INSTALL_DIR} (requires sudo)..."
     sudo mv "${TMPDIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+    sudo ln -sf "${BINARY_NAME}" "${INSTALL_DIR}/${SHORT_ALIAS}"
   fi
 }
 
@@ -144,4 +147,5 @@ seed_tasks
 
 echo
 echo "Installed ${BINARY_NAME} ${TAG} to ${INSTALL_DIR}/${BINARY_NAME}"
-echo "Run '${BINARY_NAME} tasks' to see installed cleanup tasks."
+echo "A shorter alias '${SHORT_ALIAS}' is available at ${INSTALL_DIR}/${SHORT_ALIAS}"
+echo "Run '${SHORT_ALIAS} tasks' (or '${BINARY_NAME} tasks') to see installed cleanup tasks."
