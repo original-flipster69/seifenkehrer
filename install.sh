@@ -3,7 +3,7 @@ set -e
 
 REPO="original-flipster69/seifenkehrer"
 INSTALL_DIR="${SK_INSTALL_DIR:-/usr/local/bin}"
-TASKS_DIR="${HOME}/.sk/tasks"
+TASKS_DIR="${HOME}/.seifenkehrer/tasks"
 BINARY_NAME="seifenkehrer"
 SHORT_ALIAS="sk"
 

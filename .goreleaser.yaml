@@ -21,7 +21,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X main.version={{.Version}}
+      - -s -w -X github.com/original-flipster69/seifenkehrer/cmd.version=v{{.Version}}
 
 archives:
   - id: default
@@ -67,6 +67,6 @@ release:
 #       The shorter alias 'sk' is also available on $PATH.
 #       Default cleanup tasks were installed to:
 #         #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks
-#       Copy any you want active to ~/.sk/tasks/, e.g.:
-#         mkdir -p ~/.sk/tasks
-#         cp #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks/*.yaml ~/.sk/tasks/
+#       Copy any you want active to ~/.seifenkehrer/tasks/, e.g.:
+#         mkdir -p ~/.seifenkehrer/tasks
+#         cp #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks/*.yaml ~/.seifenkehrer/tasks/
