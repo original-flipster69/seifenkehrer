@@ -8,9 +8,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/seifenkehrer/seifenkehrer/internal/execute"
-	"github.com/seifenkehrer/seifenkehrer/internal/storage"
-	"github.com/seifenkehrer/seifenkehrer/internal/task"
+	"github.com/original-flipster69/seifenkehrer/internal/execute"
+	"github.com/original-flipster69/seifenkehrer/internal/storage"
+	"github.com/original-flipster69/seifenkehrer/internal/task"
 	"github.com/spf13/cobra"
 )
 
@@ -58,8 +58,16 @@ func run(cmd *cobra.Command, args []string) error {
 
 		g := taskGroup{name: r.Name}
 		for _, p := range r.Paths {
+			if err := execute.ValidatePath(p); err != nil {
+				printError("%s: %v", p, err)
+				continue
+			}
 			g.paths = append(g.paths, p)
 			g.sizes = append(g.sizes, pathSize(p))
+		}
+		if len(g.paths) == 0 {
+			printInfo("%s %s", orange(r.Name), dim("— nothing found"))
+			continue
 		}
 		groups = append(groups, g)
 	}

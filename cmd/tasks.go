@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/seifenkehrer/seifenkehrer/internal/task"
+	"github.com/original-flipster69/seifenkehrer/internal/task"
 	"github.com/spf13/cobra"
 )
 

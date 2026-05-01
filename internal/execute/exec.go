@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/seifenkehrer/seifenkehrer/internal/storage"
+	"github.com/original-flipster69/seifenkehrer/internal/storage"
 )
 
 var protectedPrefixes = []string{
@@ -58,49 +58,15 @@ func (e *Executor) RecordRun(task string) {
 	e.state.RecordRun(task)
 }
 
-func deletePaths(paths []string) Report {
-	report := Report{
-		Errors: make(map[string]error),
-	}
-
-	for _, p := range paths {
-		if err := validatePath(p); err != nil {
-			report.Errors[p] = err
-			continue
-		}
-
-		info, err := os.Lstat(p)
-		if err != nil {
-			report.Errors[p] = err
-			continue
-		}
-
-		if info.Mode()&os.ModeSymlink != 0 {
-			err = os.Remove(p)
-		} else if info.IsDir() {
-			if containsSymlinks(p) {
-				report.Errors[p] = fmt.Errorf("refusing to delete %s: contains symlinks", p)
-				continue
-			}
-			err = os.RemoveAll(p)
-		} else {
-			err = os.Remove(p)
-		}
-
-		if err != nil {
-			report.Errors[p] = fmt.Errorf("deleting %s: %w", p, err)
-		} else {
-			report.Deleted = append(report.Deleted, p)
-		}
-	}
-
-	return report
-}
-
-func validatePath(p string) error {
+func ValidatePath(p string) error {
 	abs, err := filepath.Abs(p)
 	if err != nil {
 		return fmt.Errorf("cannot resolve %s: %w", p, err)
+	}
+
+	resolved, err := filepath.EvalSymlinks(abs)
+	if err == nil {
+		abs = resolved
 	}
 
 	home, err := os.UserHomeDir()
@@ -125,17 +91,35 @@ func validatePath(p string) error {
 	return nil
 }
 
-func containsSymlinks(dir string) bool {
-	found := false
-	filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+func deletePaths(paths []string) Report {
+	report := Report{
+		Errors: make(map[string]error),
+	}
+
+	for _, p := range paths {
+		if err := ValidatePath(p); err != nil {
+			report.Errors[p] = err
+			continue
+		}
+
+		info, err := os.Lstat(p)
 		if err != nil {
-			return nil
+			report.Errors[p] = err
+			continue
 		}
-		if d.Type()&os.ModeSymlink != 0 {
-			found = true
-			return filepath.SkipAll
+
+		if info.IsDir() {
+			err = os.RemoveAll(p)
+		} else {
+			err = os.Remove(p)
 		}
-		return nil
-	})
-	return found
+
+		if err != nil {
+			report.Errors[p] = fmt.Errorf("deleting %s: %w", p, err)
+		} else {
+			report.Deleted = append(report.Deleted, p)
+		}
+	}
+
+	return report
 }

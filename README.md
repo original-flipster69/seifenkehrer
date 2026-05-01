@@ -12,34 +12,54 @@ Define cleanup tasks as simple YAML files, review what will be deleted, and choo
 
 ## Installation
 
+### Install script
+
 ```bash
-go install github.com/seifenkehrer/seifenkehrer@latest
+curl -fsSL https://raw.githubusercontent.com/original-flipster69/seifenkehrer/main/install.sh | sh
 ```
 
-Or build from source:
+Verifies the SHA256 of the downloaded archive against the published `checksums.txt` before installing, and seeds the default cleanup tasks into `~/.sk/tasks/` (existing files are preserved).
+
+### Homebrew _(planned — tap not yet published)_
+
+Once the tap is published:
 
 ```bash
-git clone https://github.com/seifenkehrer/seifenkehrer.git
+brew install original-flipster69/sk/seifenkehrer
+```
+
+### Go install
+
+```bash
+go install github.com/original-flipster69/seifenkehrer@latest
+```
+
+### Build from source
+
+```bash
+git clone https://github.com/original-flipster69/seifenkehrer.git
 cd seifenkehrer
-go build -o sk .
+go build .
 ```
 
 ## Usage
 
+The installed binary is named `seifenkehrer`. The install script and Homebrew formula additionally create a shorter alias `sk` on `$PATH` for convenience — examples below use it.
+
 ```bash
 # List installed cleanup tasks
-sk tasks
+seifenkehrer tasks       # or: sk tasks
 
 # Run cleanup (interactive)
-sk clean
+seifenkehrer clean       # or: sk clean
 
 # Use a custom tasks directory
-sk clean --tasks-dir ./my-tasks
+seifenkehrer clean --tasks-dir ./my-tasks
 ```
 
 ## Task Configuration
 
-Tasks are YAML files placed in `~/.sk/tasks/`. See the `examples/` directory for ready-to-use tasks.
+Tasks are YAML files placed in `~/.sk/tasks/`. See the `.tasks/` directory for ready-to-use tasks.
 
 ```yaml
 name: Chrome Old Versions
@@ -67,11 +87,11 @@ interval: 168h
 
 ```bash
 # Enable/disable a task
-sk config disable <task-name>
-sk config enable <task-name>
+seifenkehrer config disable <task-name>
+seifenkehrer config enable <task-name>
 
 # Set run interval
-sk config interval <task-name> <duration>
+seifenkehrer config interval <task-name> <duration>
 ```
 
 ## How It Works

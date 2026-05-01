@@ -1,4 +1,4 @@
-module github.com/seifenkehrer/seifenkehrer
+module github.com/original-flipster69/seifenkehrer
 
 go 1.24.5
 
