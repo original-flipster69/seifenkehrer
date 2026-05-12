@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var cleanSilent bool
+
 var cleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: "Run cleanup tasks and delete matched files/folders",
@@ -21,6 +23,7 @@ var cleanCmd = &cobra.Command{
 }
 
 func init() {
+	cleanCmd.Flags().BoolVarP(&cleanSilent, "silent", "s", false, "delete all matches without prompting")
 	rootCmd.AddCommand(cleanCmd)
 }
 
@@ -29,6 +32,7 @@ type taskGroup struct {
 	paths []string
 	sizes []int64
 	force bool
+	hint  string
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -57,7 +61,7 @@ func run(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		g := taskGroup{name: r.Name, force: r.Force}
+		g := taskGroup{name: r.Name, force: r.Force, hint: r.Hint}
 		for _, p := range r.Paths {
 			if err := execute.ValidatePath(p); err != nil {
 				printError("%s: %v", p, err)
@@ -80,6 +84,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	reader := bufio.NewReader(os.Stdin)
 
+	var totalFreed int64
 	for _, g := range groups {
 		totalSize := int64(0)
 		for _, s := range g.sizes {
@@ -92,21 +97,46 @@ func run(cmd *cobra.Command, args []string) error {
 			fmt.Printf("    %s %s\n", p, dim("("+formatSize(g.sizes[i])+")"))
 		}
 
-		fmt.Printf("\n  Delete? %s / %s / %s: ", gold("[y]es all"), grey("[n]o skip"), purple("[i]ndividual"))
-		answer := readLine(reader)
+		answer := "y"
+		if !cleanSilent {
+			fmt.Printf("\n  Delete? %s / %s / %s: ", gold("[y]es all"), grey("[n]o skip"), purple("[i]ndividual"))
+			answer = readLine(reader)
+		}
 
 		switch answer {
 		case "y", "yes":
 			report := exec.Delete(g.name, g.paths, g.force)
-			printReport(report)
+			totalFreed += freedBytes(g, report)
+			printReport(report, g.hint)
 		case "i", "individual":
-			selectIndividual(reader, exec, g)
+			totalFreed += selectIndividual(reader, exec, g)
 		default:
 			printInfo("Skipped.")
 		}
 	}
 
+	freedLine := fmt.Sprintf("🧼 Total freed  %s", formatSize(totalFreed))
+	rule := strings.Repeat("━", utf8.RuneCountInString(freedLine)+3)
+	fmt.Printf("\n  %s\n   %s%s%s\n  %s\n\n",
+		purple(rule),
+		cBold+cPurple, freedLine, cReset,
+		purple(rule),
+	)
 	return nil
+}
+
+func freedBytes(g taskGroup, report execute.Report) int64 {
+	deleted := make(map[string]bool, len(report.Deleted))
+	for _, p := range report.Deleted {
+		deleted[p] = true
+	}
+	var freed int64
+	for i, p := range g.paths {
+		if deleted[p] {
+			freed += g.sizes[i]
+		}
+	}
+	return freed
 }
 
 func sectionHeader(title string, detail string) string {
@@ -117,8 +147,9 @@ func sectionHeader(title string, detail string) string {
 	return fmt.Sprintf("  %s\n  %s", orange(title), dim(strings.Repeat("─", utf8.RuneCountInString(title))))
 }
 
-func selectIndividual(reader *bufio.Reader, executor *execute.Executor, g taskGroup) {
-	var anyDeleted bool
+func selectIndividual(reader *bufio.Reader, executor *execute.Executor, g taskGroup) int64 {
+	var anyDeleted, anyError bool
+	var freed int64
 	for i, p := range g.paths {
 		fmt.Printf("    Delete %s %s? %s: ", p, dim("("+formatSize(g.sizes[i])+")"), grey("[y/N]"))
 		answer := readLine(reader)
@@ -126,9 +157,11 @@ func selectIndividual(reader *bufio.Reader, executor *execute.Executor, g taskGr
 			report := executor.DeleteOne(p, g.force)
 			if len(report.Deleted) > 0 {
 				anyDeleted = true
+				freed += g.sizes[i]
 				printSuccess("Deleted.")
 			}
 			for ep, e := range report.Errors {
+				anyError = true
 				printError("%s: %v", ep, e)
 			}
 		}
@@ -136,13 +169,27 @@ func selectIndividual(reader *bufio.Reader, executor *execute.Executor, g taskGr
 	if anyDeleted {
 		executor.RecordRun(g.name)
 	}
+	if anyError {
+		printHint(g.hint)
+	}
+	return freed
 }
 
-func printReport(report execute.Report) {
+func printReport(report execute.Report, hint string) {
 	printSuccess("Deleted %d path(s).", len(report.Deleted))
 	for p, e := range report.Errors {
 		printError("%s: %v", p, e)
 	}
+	if len(report.Errors) > 0 {
+		printHint(hint)
+	}
+}
+
+func printHint(hint string) {
+	if hint == "" {
+		return
+	}
+	fmt.Printf("\n    %s %s\n", grey("🧹"), italic(gold(hint)))
 }
 
 func readLine(reader *bufio.Reader) string {

@@ -19,6 +19,7 @@ type taskDef struct {
 	KeepNewest  int      `yaml:"keep_newest,omitempty"`
 	Interval    string   `yaml:"interval,omitempty"`
 	Force       bool     `yaml:"force,omitempty"`
+	Hint        string   `yaml:"hint,omitempty"`
 }
 
 type Task struct {
@@ -40,6 +41,7 @@ type Result struct {
 	Paths   []string
 	Skipped string
 	Force   bool
+	Hint    string
 	Error   error
 }
 
@@ -87,6 +89,7 @@ func Resolve(tasksDir string, provider LastRunProvider) ([]Result, []error) {
 			Name:  l.task.Name,
 			Paths: paths,
 			Force: l.def.Force,
+			Hint:  l.def.Hint,
 			Error: err,
 		})
 	}

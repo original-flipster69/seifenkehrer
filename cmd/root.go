@@ -75,6 +75,7 @@ var (
 	cGreen  = "\033[38;5;114m"
 	cDim    = "\033[2m"
 	cBold   = "\033[1m"
+	cItalic = "\033[3m"
 	cReset  = "\033[0m"
 )
 
@@ -86,6 +87,7 @@ func red(s string) string    { return cRed + s + cReset }
 func green(s string) string  { return cGreen + s + cReset }
 func dim(s string) string    { return cDim + s + cReset }
 func bold(s string) string   { return cBold + s + cReset }
+func italic(s string) string { return cItalic + s + cReset }
 
 func printError(format string, a ...any) {
 	fmt.Fprintf(os.Stderr, "  %s %s\n", red("✗"), fmt.Sprintf(format, a...))
