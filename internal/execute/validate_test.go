@@ -83,7 +83,7 @@ func TestValidatePathRejectsSymlinkTraversal(t *testing.T) {
 }
 
 func TestDeleteRefusesProtectedPath(t *testing.T) {
-	report := deletePaths([]string{"/System/Library"})
+	report := deletePaths([]string{"/System/Library"}, false)
 	if len(report.Deleted) != 0 {
 		t.Error("should not delete protected path")
 	}
@@ -107,7 +107,7 @@ func TestDeleteDirWithSymlinkPreservesExternalTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	report := deletePaths([]string{victim})
+	report := deletePaths([]string{victim}, false)
 	if len(report.Deleted) != 1 {
 		t.Fatalf("expected 1 deleted, got %d (errors: %v)", len(report.Deleted), report.Errors)
 	}
@@ -127,7 +127,7 @@ func TestDeleteSymlinkDirectly(t *testing.T) {
 	link := filepath.Join(dir, "link.txt")
 	os.Symlink(target, link)
 
-	report := deletePaths([]string{link})
+	report := deletePaths([]string{link}, false)
 	if len(report.Deleted) != 1 {
 		t.Fatal("expected symlink to be deleted")
 	}
@@ -145,7 +145,7 @@ func TestDeletePartialFailure(t *testing.T) {
 	good := filepath.Join(dir, "good.txt")
 	os.WriteFile(good, []byte("data"), 0644)
 
-	report := deletePaths([]string{good, "/System/bad"})
+	report := deletePaths([]string{good, "/System/bad"}, false)
 	if len(report.Deleted) != 1 {
 		t.Errorf("expected 1 deleted, got %d", len(report.Deleted))
 	}

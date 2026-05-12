@@ -42,16 +42,16 @@ func (e *Executor) LastRun(task string) *time.Time {
 	return e.state.lastRun(task)
 }
 
-func (e *Executor) Delete(task string, paths []string) Report {
-	report := deletePaths(paths)
+func (e *Executor) Delete(task string, paths []string, force bool) Report {
+	report := deletePaths(paths, force)
 	if len(report.Deleted) > 0 {
 		e.state.RecordRun(task)
 	}
 	return report
 }
 
-func (e *Executor) DeleteOne(path string) Report {
-	return deletePaths([]string{path})
+func (e *Executor) DeleteOne(path string, force bool) Report {
+	return deletePaths([]string{path}, force)
 }
 
 func (e *Executor) RecordRun(task string) {
@@ -91,7 +91,7 @@ func ValidatePath(p string) error {
 	return nil
 }
 
-func deletePaths(paths []string) Report {
+func deletePaths(paths []string, force bool) Report {
 	report := Report{
 		Errors: make(map[string]error),
 	}
@@ -108,6 +108,10 @@ func deletePaths(paths []string) Report {
 			continue
 		}
 
+		if force {
+			chmodWritable(p)
+		}
+
 		if info.IsDir() {
 			err = os.RemoveAll(p)
 		} else {
@@ -122,4 +126,22 @@ func deletePaths(paths []string) Report {
 	}
 
 	return report
+}
+
+func chmodWritable(root string) {
+	filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		info, ierr := d.Info()
+		if ierr != nil {
+			return nil
+		}
+		mode := info.Mode()
+		if mode&os.ModeSymlink != 0 {
+			return nil
+		}
+		os.Chmod(path, mode.Perm()|0200)
+		return nil
+	})
 }

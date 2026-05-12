@@ -11,7 +11,7 @@ func TestDeleteFile(t *testing.T) {
 	f := filepath.Join(dir, "deleteme.txt")
 	os.WriteFile(f, []byte("data"), 0644)
 
-	report := deletePaths([]string{f})
+	report := deletePaths([]string{f}, false)
 	if len(report.Deleted) != 1 {
 		t.Fatalf("expected 1 deleted, got %d", len(report.Deleted))
 	}
@@ -29,7 +29,7 @@ func TestDeleteDirectory(t *testing.T) {
 	os.MkdirAll(sub, 0755)
 	os.WriteFile(filepath.Join(sub, "file.txt"), []byte("data"), 0644)
 
-	report := deletePaths([]string{sub})
+	report := deletePaths([]string{sub}, false)
 	if len(report.Deleted) != 1 {
 		t.Fatalf("expected 1 deleted, got %d", len(report.Deleted))
 	}
@@ -39,7 +39,7 @@ func TestDeleteDirectory(t *testing.T) {
 }
 
 func TestDeleteNonexistent(t *testing.T) {
-	report := deletePaths([]string{"/nonexistent/path/12345"})
+	report := deletePaths([]string{"/nonexistent/path/12345"}, false)
 	if len(report.Deleted) != 0 {
 		t.Error("expected 0 deleted")
 	}
@@ -49,11 +49,48 @@ func TestDeleteNonexistent(t *testing.T) {
 }
 
 func TestDeleteEmpty(t *testing.T) {
-	report := deletePaths(nil)
+	report := deletePaths(nil, false)
 	if len(report.Deleted) != 0 {
 		t.Error("expected 0 deleted")
 	}
 	if len(report.Errors) != 0 {
 		t.Error("expected 0 errors")
+	}
+}
+
+func TestDeleteReadOnlyDirectoryFailsWithoutForce(t *testing.T) {
+	dir := tmpDir(t)
+	ro := filepath.Join(dir, "ro")
+	os.MkdirAll(ro, 0755)
+	os.WriteFile(filepath.Join(ro, "file.txt"), []byte("data"), 0644)
+	if err := os.Chmod(ro, 0555); err != nil {
+		t.Fatalf("chmod: %v", err)
+	}
+	t.Cleanup(func() { os.Chmod(ro, 0755) })
+
+	report := deletePaths([]string{ro}, false)
+	if len(report.Errors) == 0 {
+		t.Fatal("expected error deleting read-only directory without force")
+	}
+}
+
+func TestDeleteReadOnlyDirectoryWithForce(t *testing.T) {
+	dir := tmpDir(t)
+	ro := filepath.Join(dir, "ro")
+	os.MkdirAll(ro, 0755)
+	os.WriteFile(filepath.Join(ro, "file.txt"), []byte("data"), 0644)
+	if err := os.Chmod(ro, 0555); err != nil {
+		t.Fatalf("chmod: %v", err)
+	}
+
+	report := deletePaths([]string{ro}, true)
+	if len(report.Errors) != 0 {
+		t.Fatalf("expected 0 errors with force, got: %v", report.Errors)
+	}
+	if len(report.Deleted) != 1 {
+		t.Fatalf("expected 1 deleted, got %d", len(report.Deleted))
+	}
+	if _, err := os.Stat(ro); !os.IsNotExist(err) {
+		t.Error("read-only directory should have been deleted")
 	}
 }

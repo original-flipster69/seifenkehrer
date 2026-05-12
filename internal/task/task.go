@@ -18,6 +18,7 @@ type taskDef struct {
 	Exclude     []string `yaml:"exclude,omitempty"`
 	KeepNewest  int      `yaml:"keep_newest,omitempty"`
 	Interval    string   `yaml:"interval,omitempty"`
+	Force       bool     `yaml:"force,omitempty"`
 }
 
 type Task struct {
@@ -38,6 +39,7 @@ type Result struct {
 	Name    string
 	Paths   []string
 	Skipped string
+	Force   bool
 	Error   error
 }
 
@@ -84,6 +86,7 @@ func Resolve(tasksDir string, provider LastRunProvider) ([]Result, []error) {
 		results = append(results, Result{
 			Name:  l.task.Name,
 			Paths: paths,
+			Force: l.def.Force,
 			Error: err,
 		})
 	}

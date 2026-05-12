@@ -1,5 +1,6 @@
 name: Go Module Cache
 description: Removes the Go module download cache and extracted module sources
+force: true
 globs:
   - ~/go/pkg/mod/cache/*
   - ~/go/pkg/mod/*

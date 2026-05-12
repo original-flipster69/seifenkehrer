@@ -28,6 +28,7 @@ type taskGroup struct {
 	name  string
 	paths []string
 	sizes []int64
+	force bool
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -56,7 +57,7 @@ func run(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		g := taskGroup{name: r.Name}
+		g := taskGroup{name: r.Name, force: r.Force}
 		for _, p := range r.Paths {
 			if err := execute.ValidatePath(p); err != nil {
 				printError("%s: %v", p, err)
@@ -96,7 +97,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 		switch answer {
 		case "y", "yes":
-			report := exec.Delete(g.name, g.paths)
+			report := exec.Delete(g.name, g.paths, g.force)
 			printReport(report)
 		case "i", "individual":
 			selectIndividual(reader, exec, g)
@@ -122,7 +123,7 @@ func selectIndividual(reader *bufio.Reader, executor *execute.Executor, g taskGr
 		fmt.Printf("    Delete %s %s? %s: ", p, dim("("+formatSize(g.sizes[i])+")"), grey("[y/N]"))
 		answer := readLine(reader)
 		if answer == "y" || answer == "yes" {
-			report := executor.DeleteOne(p)
+			report := executor.DeleteOne(p, g.force)
 			if len(report.Deleted) > 0 {
 				anyDeleted = true
 				printSuccess("Deleted.")
