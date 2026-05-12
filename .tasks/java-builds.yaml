@@ -1,0 +1,9 @@
+name: Java Builds
+description: Finds Maven target and Gradle build output directories in common project locations under home
+globs:
+  - ~/*/target
+  - ~/*/build
+  - ~/*/*/target
+  - ~/*/*/build
+  - ~/*/.*/*/target
+  - ~/*/.*/*/build

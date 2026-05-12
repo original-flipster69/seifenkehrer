@@ -1,0 +1,9 @@
+name: NPM Packages
+description: Finds node_modules dependency directories in common project locations under home
+globs:
+  - ~/*/node_modules
+  - ~/*/.*/node_modules
+  - ~/*/*/node_modules
+  - ~/*/*/.*/node_modules
+  - ~/*/.*/*/node_modules
+  - ~/*/.*/*/*/node_modules
