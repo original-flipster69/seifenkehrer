@@ -20,9 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/original-flipster69/seifenkehrer/ma
 
 Verifies the SHA256 of the downloaded archive against the published `checksums.txt` before installing, and seeds the default cleanup tasks into `~/.seifenkehrer/tasks/` (existing files are preserved).
 
-### Homebrew _(planned — tap not yet published)_
-
-Once the tap is published:
+### Homebrew
 
 ```bash
 brew tap original-flipster69/seifenkehrer
