@@ -25,7 +25,8 @@ Verifies the SHA256 of the downloaded archive against the published `checksums.t
 Once the tap is published:
 
 ```bash
-brew install original-flipster69/sk/seifenkehrer
+brew tap original-flipster69/seifenkehrer
+brew install seifenkehrer
 ```
 
 ### Go install
@@ -53,9 +54,14 @@ seifenkehrer tasks       # or: sk tasks
 # Run cleanup (interactive)
 seifenkehrer clean       # or: sk clean
 
+# Run cleanup non-interactively (delete everything matched, no prompts)
+seifenkehrer clean -s    # or: sk clean --silent
+
 # Use a custom tasks directory
 seifenkehrer clean --tasks-dir ./my-tasks
 ```
+
+After every run a summary line shows the total bytes actually freed (paths that failed to delete are excluded).
 
 ## Task Configuration
 
@@ -72,6 +78,18 @@ keep_newest: 1
 interval: 168h
 ```
 
+Tasks that target read-only trees (Go module cache, code-signed app bundles, etc.) can opt into a chmod walk and surface a hint when deletions still fail:
+
+```yaml
+name: Go Module Cache
+description: Removes the Go module download cache and extracted module sources
+force: true
+hint: Run `go clean -modcache` to recover
+globs:
+  - ~/go/pkg/mod/cache/*
+  - ~/go/pkg/mod/*
+```
+
 ### Fields
 
 | Field | Required | Description |
@@ -82,6 +100,8 @@ interval: 168h
 | `exclude` | No | Basenames to skip |
 | `keep_newest` | No | Keep the N most recent matches |
 | `interval` | No | Minimum time between runs (e.g. `24h`, `168h`) |
+| `force` | No | Walk matched paths and add user write permission before deleting — needed for read-only trees like the Go module cache or code-signed bundles |
+| `hint` | No | Free-form hint shown after the error block when one or more deletions in the task fail |
 
 ## Task Management
 
@@ -100,4 +120,6 @@ seifenkehrer config interval <task-name> <duration>
 2. Resolves globs, applies exclusions and `keep_newest`
 3. Skips tasks whose interval hasn't elapsed
 4. Shows matched paths grouped by task with sizes
-5. Prompts per task: accept all, skip, or choose individually
+5. Prompts per task: accept all, skip, or choose individually (or skips prompting entirely with `--silent`)
+6. For tasks with `force: true`, walks each matched path adding user write permission before deletion
+7. Prints any per-task `hint` after errors, then a total-bytes-freed summary at the end of the run

@@ -45,28 +45,22 @@ release:
   draft: false
   prerelease: auto
 
-# To publish a Homebrew formula on every release:
-#   1. Create a public repo at github.com/original-flipster69/homebrew-sk
-#   2. Generate a fine-grained PAT with contents:write on that repo
-#      and add it to this repo's secrets as HOMEBREW_TAP_GITHUB_TOKEN.
-#   3. Uncomment the block below and the env line in .github/workflows/release.yaml.
-#
-# brews:
-#   - name: seifenkehrer
-#     repository:
-#       owner: original-flipster69
-#       name: homebrew-sk
-#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-#     homepage: https://github.com/original-flipster69/seifenkehrer
-#     description: A modular cleanup tool to keep your macOS clean and free of clutter.
-#     install: |
-#       bin.install "seifenkehrer"
-#       bin.install_symlink "seifenkehrer" => "sk"
-#       (pkgshare/"tasks").install Dir["tasks/*.yaml"]
-#     caveats: |
-#       The shorter alias 'sk' is also available on $PATH.
-#       Default cleanup tasks were installed to:
-#         #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks
-#       Copy any you want active to ~/.seifenkehrer/tasks/, e.g.:
-#         mkdir -p ~/.seifenkehrer/tasks
-#         cp #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks/*.yaml ~/.seifenkehrer/tasks/
+brews:
+  - name: seifenkehrer
+    repository:
+      owner: original-flipster69
+      name: homebrew-seifenkehrer
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://github.com/original-flipster69/seifenkehrer
+    description: A modular cleanup tool to keep your macOS clean and free of clutter.
+    install: |
+      bin.install "seifenkehrer"
+      bin.install_symlink "seifenkehrer" => "sk"
+      (pkgshare/"tasks").install Dir["tasks/*.yaml"]
+    caveats: |
+      The shorter alias 'sk' is also available on $PATH.
+      Default cleanup tasks were installed to:
+        #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks
+      Copy any you want active to ~/.seifenkehrer/tasks/, e.g.:
+        mkdir -p ~/.seifenkehrer/tasks
+        cp #{HOMEBREW_PREFIX}/share/seifenkehrer/tasks/*.yaml ~/.seifenkehrer/tasks/
